@@ -1,0 +1,73 @@
+---
+title: "TP2-Bernier-Grabsia"
+output: html_document
+date: "2022-11-28"
+---
+
+```{r importations}
+library(ggplot2)
+```
+
+
+# Partie 1
+
+## Question 1
+
+```{r question1}
+X <- rnorm(500, 5, 2)
+print(X)
+```
+## Question 2
+
+Ici, \theta vaut la moyenne de la loi normale, soit 5.
+
+## Question 3
+
+```{r question3}
+estimateurs <- function(x, N, theta)
+{
+
+  #Initialise les estimateurs avec un tableau vide
+  theta_estim1=rep(0,N) 
+  theta_estim2=rep(0,N)
+  theta_estim3=rep(0,N)
+
+  for (i in 1:N) {
+    theta_estim1[i] = mean(x[1:i])
+    theta_estim2[i] = median(x[1:i])
+    theta_estim3[i] = (min(x[1:i]) + max(x[1:i]))/2
+  }
+  
+  biais_theta=rep(0,3)
+
+  biais_theta[1]=mean(theta_estim1)-theta
+  biais_theta[2]=mean(theta_estim2)-theta
+  biais_theta[3]=mean(theta_estim3)-theta
+
+
+  rq_theta=rep(0,3)
+  
+  rq_theta[1]=mean((theta_estim1-theta)^2)
+  rq_theta[2]=mean((theta_estim2-theta)^2)
+  rq_theta[3]=mean((theta_estim3-theta)^2)
+  
+  return(list(theta_estim1 = theta_estim1, theta_estim2 = theta_estim2, theta_estim3 = theta_estim3, biais_theta = biais_theta, rq_theta = rq_theta))
+}
+
+ans = estimateurs(x, 500, 5)
+print(ans["theta_estim1"])
+```
+
+
+```{r}
+df_theta_estim1 = data.frame(num = c(1:500), theta1=ans$theta_estim1)
+
+ggplot(df_theta_estim1) +
+ aes(x = num, y = theta1) +
+ geom_line(colour = "#112446") +
+ labs(x = "n", 
+ y = "theta1", title = "Evolution de l'estimateur theta1 en fonction du nombre de variables considérées(n)") +
+ theme_minimal() +
+ theme(plot.title = element_text(hjust = 0.5))
+"Estimateur \theta_{1} calculé en fonction du nombre de variables considérées")
+```
