@@ -9,7 +9,7 @@ library(ggplot2)
 ```
 
 
-# Partie 1
+# Partie 1.1
 
 ## Question 1
 
@@ -38,36 +38,97 @@ estimateurs <- function(x, N, theta)
     theta_estim3[i] = (min(x[1:i]) + max(x[1:i]))/2
   }
   
-  biais_theta=rep(0,3)
-
-  biais_theta[1]=mean(theta_estim1)-theta
-  biais_theta[2]=mean(theta_estim2)-theta
-  biais_theta[3]=mean(theta_estim3)-theta
-
-
-  rq_theta=rep(0,3)
   
-  rq_theta[1]=mean((theta_estim1-theta)^2)
-  rq_theta[2]=mean((theta_estim2-theta)^2)
-  rq_theta[3]=mean((theta_estim3-theta)^2)
-  
-  return(list(theta_estim1 = theta_estim1, theta_estim2 = theta_estim2, theta_estim3 = theta_estim3, biais_theta = biais_theta, rq_theta = rq_theta))
+  return(list(theta_estim1 = theta_estim1, theta_estim2 = theta_estim2, theta_estim3 = theta_estim3))
 }
 
 ans = estimateurs(x, 500, 5)
-print(ans["theta_estim1"])
 ```
 
 
 ```{r}
-df_theta_estim1 = data.frame(num = c(1:500), theta1=ans$theta_estim1)
+affiche <- function(ans){
+  df_theta_estim1 = data.frame(num = c(1:500), theta1=ans$theta_estim1)
+  df_theta_estim2 = data.frame(num = c(1:500), theta2=ans$theta_estim2)
+  df_theta_estim3 = data.frame(num = c(1:500), theta3=ans$theta_estim3)
 
-ggplot(df_theta_estim1) +
- aes(x = num, y = theta1) +
- geom_line(colour = "#112446") +
- labs(x = "n", 
- y = "theta1", title = "Evolution de l'estimateur theta1 en fonction du nombre de variables considérées(n)") +
- theme_minimal() +
- theme(plot.title = element_text(hjust = 0.5))
-"Estimateur \theta_{1} calculé en fonction du nombre de variables considérées")
+  ggplot(df_theta_estim1) +
+  aes(x = num, y = theta1) +
+  geom_line(colour = "#112446") +
+  labs(x = "n", 
+  y = "theta1", title = expression("Evolution de "~theta~"1 en fonction du nombre de variables considérées")) +
+   theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+  
+  ggplot(df_theta_estim2) +
+  aes(x = num, y = theta2) +
+  geom_line(colour = "#112446") +
+  labs(x = "n", 
+   y = "theta2", title = expression("Evolution de "~theta~"2 en fonction du nombre de variables considérées")) +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+
+  ggplot(df_theta_estim3) +
+   aes(x = num, y = theta3) +
+   geom_line(colour = "#112446") +
+   labs(x = "n", 
+   y = "theta3", title = expression("Evolution de "~theta~"3 en fonction du nombre de variables considérées")) +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+}
+affiche(ans)
+```
+
+## Question 4
+```{r}
+
+biais_et_variances_estimateurs <- function(theta, nb_variables, nb_moyenne){
+  
+  biais_theta1 =rep(0,200)
+  biais_theta2 = rep(0,200)
+  biais_theta3 = rep(0,200)
+  
+  variance_theta1 =rep(0,200)
+  variance_theta2 = rep(0,200)
+  variance_theta3 = rep(0,200)
+  
+  for (i in 1:nb_moyenne) {
+    x <- rnorm(nb_variables, 5, 2)
+    ans <- estimateurs(x, nb_variables, theta)
+    biais_theta1[i] = mean(ans$theta_estim1)-theta
+    biais_theta2[i] = mean(ans$theta_estim2)-theta
+    biais_theta3[i] = mean(ans$theta_estim3)-theta  
+    variance_theta1[i] = mean((ans$theta_estim1 - theta)^2)
+    variance_theta2[i] = mean((ans$theta_estim2 - theta)^2)
+    variance_theta3[i] = mean((ans$theta_estim3 - theta)^2)
+    
+    }
+
+  return (list(biais_theta1 = mean(biais_theta1), biais_theta2 = mean(biais_theta2), biais_theta3 = mean(biais_theta3), variance_theta1 = mean(variance_theta1), variance_theta2 = mean(variance_theta2), variance_theta3 = mean(variance_theta3)))
+}  
+biais <- biais_estimateurs(5, 500, 200)
+print(biais)
+```
+# ¨Partie 1.2
+
+## Question 5
+
+```{r question1}
+X <- runif(500,min=0,max=8)
+print(X)
+```
+
+## Question 6
+ Dans ce cas là, expression(theta) vaut 0 + 8/2 = 4
+ 
+## Question 7
+
+```{r question7}
+ans = estimateurs(X, 500, 5)
+affiche(ans)
+```
+
+```{r question8}
+biais <- biais_estimateurs(5, 500, 200)
+print(biais)
 ```
