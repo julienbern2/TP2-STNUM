@@ -8,10 +8,17 @@ date: "2022-11-28"
 library(ggplot2)
 ```
 
+Dans ce TP nous nous intéresserons dans un premier temps aux différents estimateurs de l'axe de symétrie de la densité de deux variable aléatoires : une variable de loi normale de moyenne 5 et d'écart type 2, et une variable de loi uniforme entre 0 et 8. Puis, dans un second temps, nous nous intéresserons à l'application de cette première partie sur l'estimation d'une loi pouvant décrire le poids des poulpes. Enfin, nous utiliserons le test du khi-deux sur un jeu de données représentant le nombre de naissance journalier dans un hopital américain.  
+
+#Partie 1
+
+Nous nous intéressons dans cette partie aux propriétés de trois estimateurs de \theta définis dans l'
 
 # Partie 1.1
 
 ## Question 1
+
+Nous commençons par simuler 500 variables aléatoires indépendantes de loi normale de paramètre (5,2).
 
 ```{r question1}
 X <- rnorm(500, 5, 2)
@@ -19,19 +26,18 @@ print(X)
 ```
 ## Question 2
 
-Ici, \theta vaut la moyenne de la loi normale, soit 5.
+Une loi normale est une loi symétrique par rapport à sa moyenne, donc ici, \theta vaut \mu soit 5.
 
 ## Question 3
 
 ```{r question3}
 estimateurs <- function(x, N, theta)
 {
-
   #Initialise les estimateurs avec un tableau vide
   theta_estim1=rep(0,N) 
   theta_estim2=rep(0,N)
   theta_estim3=rep(0,N)
-
+  
   for (i in 1:N) {
     theta_estim1[i] = mean(x[1:i])
     theta_estim2[i] = median(x[1:i])
@@ -42,7 +48,7 @@ estimateurs <- function(x, N, theta)
   return(list(theta_estim1 = theta_estim1, theta_estim2 = theta_estim2, theta_estim3 = theta_estim3))
 }
 
-ans = estimateurs(x, 500, 5)
+ans = estimateurs(X, 500, 5)
 ```
 
 
@@ -52,7 +58,7 @@ affiche <- function(ans){
   df_theta_estim2 = data.frame(num = c(1:500), theta2=ans$theta_estim2)
   df_theta_estim3 = data.frame(num = c(1:500), theta3=ans$theta_estim3)
 
-  ggplot(df_theta_estim1) +
+  p1 <- ggplot(df_theta_estim1) +
   aes(x = num, y = theta1) +
   geom_line(colour = "#112446") +
   labs(x = "n", 
@@ -60,7 +66,7 @@ affiche <- function(ans){
    theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
   
-  ggplot(df_theta_estim2) +
+  p2 <- ggplot(df_theta_estim2) +
   aes(x = num, y = theta2) +
   geom_line(colour = "#112446") +
   labs(x = "n", 
@@ -68,58 +74,83 @@ affiche <- function(ans){
    theme_minimal() +
    theme(plot.title = element_text(hjust = 0.5))
 
-  ggplot(df_theta_estim3) +
+  p3 <- ggplot(df_theta_estim3) +
    aes(x = num, y = theta3) +
    geom_line(colour = "#112446") +
    labs(x = "n", 
    y = "theta3", title = expression("Evolution de "~theta~"3 en fonction du nombre de variables considérées")) +
    theme_minimal() +
    theme(plot.title = element_text(hjust = 0.5))
-}
-affiche(ans)
+
+  return(list(p1 = p1, p2 = p2, p3 = p3))
+  }
+plots = affiche(ans)
 ```
 
-## Question 4
 ```{r}
+plots$p1
+plots$p2
+plots$p3
+```
 
-biais_et_variances_estimateurs <- function(theta, nb_variables, nb_moyenne){
+
+On remarque que les trois estimateurs convergent assez rapidement. Les deux premières variables convergent au bout d'une cinquantaine d'observations. Pour le troisième estimateur, on observe une fonction en escalier, et celle-ci varie tout au long des différentes observations. Les deux premiers estimateurs convergent vers une valeur légérement inférieure à \theta, alors que la dernière converge vers une valeur légèrement suppérieure. Ainsi, les trois estimateurs sont consitants.  
+
+## Question 4
+
+```{r}
+biais_et_risques_quadratiques_estimateurs <- function(theta, nb_variables, nb_moyenne, normale = TRUE){
   
-  biais_theta1 =rep(0,200)
+  biais_theta1 = rep(0,200)
   biais_theta2 = rep(0,200)
   biais_theta3 = rep(0,200)
   
-  variance_theta1 =rep(0,200)
-  variance_theta2 = rep(0,200)
-  variance_theta3 = rep(0,200)
+  rq_theta1 =rep(0,200)
+  rq_theta2 = rep(0,200)
+  rq_theta3 = rep(0,200)
   
   for (i in 1:nb_moyenne) {
-    x <- rnorm(nb_variables, 5, 2)
+    if (normale){
+      x <- rnorm(nb_variables, 5, 2)
+    }
+    else {
+      x <- runif(nb_variables,0, 8)
+    }
     ans <- estimateurs(x, nb_variables, theta)
     biais_theta1[i] = mean(ans$theta_estim1)-theta
     biais_theta2[i] = mean(ans$theta_estim2)-theta
     biais_theta3[i] = mean(ans$theta_estim3)-theta  
-    variance_theta1[i] = mean((ans$theta_estim1 - theta)^2)
-    variance_theta2[i] = mean((ans$theta_estim2 - theta)^2)
-    variance_theta3[i] = mean((ans$theta_estim3 - theta)^2)
+    rq_theta1[i] = mean((ans$theta_estim1 - theta)^2)
+    rq_theta2[i] = mean((ans$theta_estim2 - theta)^2)
+    rq_theta3[i] = mean((ans$theta_estim3 - theta)^2)
     
     }
 
-  return (list(biais_theta1 = mean(biais_theta1), biais_theta2 = mean(biais_theta2), biais_theta3 = mean(biais_theta3), variance_theta1 = mean(variance_theta1), variance_theta2 = mean(variance_theta2), variance_theta3 = mean(variance_theta3)))
+  return (list(biais_theta1 = mean(biais_theta1), biais_theta2 = mean(biais_theta2), biais_theta3 = mean(biais_theta3), rq_theta1 = mean(rq_theta1), rq_theta2 = mean(rq_theta2), rq_theta3 = mean(rq_theta3)))
 }  
-biais <- biais_estimateurs(5, 500, 200)
+biais <- biais_et_risques_quadratiques_estimateurs(5, 500, 200)
 print(biais)
 ```
-# ¨Partie 1.2
+On retrouve bien les biais observés sur les figures précédentes : Un biais négatif (l'estimateur "sous-estime" la valeur) et relativement faible pour les deux premiers estimateurs, et un biais positif (l'estimateur "sur-estime" la valeur) et un peu plus élevé pour le troisième estimateur. 
+
+Concernant les risques quadratiques, on observe que ceux des deux premiers sont beaucoup plus faibles (environ 1% de la valeur que l'on cherche à estimer) que celui du troisième estimateur. 
+
+Ainsi, pour une loi normale, le meilleur estimateur est le premier, car c'est celui avec le plus petit biais et le plus petit risque quadratique.  
+
+# Partie 1.2
+
+On s'intéresse cette fois-ci à une variable de loi uniforme entre 0 et 8.
 
 ## Question 5
 
-```{r question1}
+```{r question5}
 X <- runif(500,min=0,max=8)
 print(X)
 ```
 
 ## Question 6
- Dans ce cas là, expression(theta) vaut 0 + 8/2 = 4
+
+Dans ce cas là, expression(theta) vaut 0 + 8/2 = 4, car la fonction de densité est uniforme sur l'intervale considéré, donc l'axe de symétrie est le centre de l'intervalle. (Pour tout x dans [0;4] on a bien l'égalité car uniformité, et pour tout x suppérieur, x + \theta et x - \theta sont tous les deux en dehors de l'intervalle, donc la fonction de densité est nulle.)
  
 ## Question 7
 
@@ -128,7 +159,19 @@ ans = estimateurs(X, 500, 5)
 affiche(ans)
 ```
 
+
+Comme précedemment, on observe que les trois estimateurs sont consitants car tendent assymptotiquement vers la valeur recherchée : 4. La structure de la courbe 3 est toujours une fonction en escalier. Cependant, on observe cette fois-ci que l'estimateur convergeant le plus vite est le troisième. Concernant les biais, ils semblent tout les trois positifs, cependant ils semblent beaucoup moins important que précedemment. L'estimateur 2 est celui qui semble le plus fluctuer autour de la valeur recherchée. 
+
+## Question 8
+
 ```{r question8}
-biais <- biais_estimateurs(5, 500, 200)
+biais <- biais_et_risques_quadratiques_estimateurs(4, 500, 200, normale = FALSE)
 print(biais)
 ```
+On remarque que les biais des deux premiers estimateurs sont négatifs, contrairement aux observations faites à la question précédente. On remarque aussi que le biais du second estimateur est plus grand en valeur absolu que les deux autres, comme on peut le voir sur la figure. Les biais du premier et du troisième opérateur sont du même ordre de grandeur, et ils sont dix fois plus faibles que ceux obtenus dans le cas d'une loi normale.
+
+Concernant les risques quadratiques, encore une fois, celui du deuxième estimateur est plus élevé que ceux des deux autres. Le plus faible est celui du troisième estimateur, qui est deux fois plus faible que celui du premier.
+
+Ainsi, le meilleur estimateur à choisir afin d'estimer l'axe de symétrie de la fonction de densité d'une loi normale est le troisième, car c'est celui avec le biais le plus faible, et le risque quadratique le plus faible (ici, on peut considérer ce risque comme une variance au vu de la faible valeur du biais).
+
+On peut aussi conclure qu'un estimateur bon dans un cas de figure (par exemple pour une variable suivant une loi normale) ne l'est pas forcément dans un autre cas de figure. 
